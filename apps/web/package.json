@@ -1,0 +1,10 @@
+{
+  "name": "@library/web",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"TODO: scaffold Next.js app in apps/web\"",
+    "build": "echo \"TODO: add Next.js build\"",
+    "lint": "echo \"TODO: add web lint\"",
+    "test": "echo \"TODO: add web tests\""
+  }
+}

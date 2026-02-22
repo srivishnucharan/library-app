@@ -1,0 +1,210 @@
+// Prisma starter schema for a multi-branch library platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  LIBRARIAN
+  ADMIN
+}
+
+enum CopyStatus {
+  AVAILABLE
+  LOANED
+  RESERVED
+  LOST
+  MAINTENANCE
+}
+
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+enum ReservationStatus {
+  WAITING
+  READY
+  COMPLETED
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  fullName      String
+  passwordHash  String
+  role          Role     @default(MEMBER)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  loans         Loan[]
+  reservations  Reservation[]
+  fines         Fine[]
+  auditLogs     AuditLog[]
+}
+
+model Branch {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  copies      BookCopy[]
+  reservations Reservation[]
+}
+
+model Author {
+  id          String   @id @default(cuid())
+  name        String
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  books       BookAuthor[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+
+  books       Book[]
+}
+
+model Book {
+  id            String   @id @default(cuid())
+  isbn13        String?  @unique
+  title         String
+  subtitle      String?
+  description   String?
+  language      String?
+  publishYear   Int?
+  coverUrl      String?
+  categoryId    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  authors       BookAuthor[]
+  copies        BookCopy[]
+  reservations  Reservation[]
+}
+
+model BookAuthor {
+  bookId      String
+  authorId    String
+
+  book        Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author      Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, authorId])
+}
+
+model BookCopy {
+  id            String     @id @default(cuid())
+  bookId         String
+  branchId       String
+  barcode        String     @unique
+  shelfLocation  String?
+  status         CopyStatus @default(AVAILABLE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  book           Book       @relation(fields: [bookId], references: [id])
+  branch         Branch     @relation(fields: [branchId], references: [id])
+  loans          Loan[]
+}
+
+model Loan {
+  id            String     @id @default(cuid())
+  userId         String
+  copyId         String
+  issuedById     String?
+  returnedToId   String?
+  status         LoanStatus  @default(ACTIVE)
+  issuedAt       DateTime    @default(now())
+  dueAt          DateTime
+  returnedAt     DateTime?
+  renewCount     Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  user           User        @relation(fields: [userId], references: [id])
+  copy           BookCopy    @relation(fields: [copyId], references: [id])
+
+  @@index([userId, status])
+  @@index([copyId, status])
+  @@index([dueAt])
+}
+
+model Reservation {
+  id            String            @id @default(cuid())
+  userId         String
+  bookId         String
+  branchId       String?
+  status         ReservationStatus @default(WAITING)
+  queuePosition  Int
+  expiresAt      DateTime?
+  fulfilledAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user           User              @relation(fields: [userId], references: [id])
+  book           Book              @relation(fields: [bookId], references: [id])
+  branch         Branch?           @relation(fields: [branchId], references: [id])
+
+  @@index([bookId, status, queuePosition])
+  @@index([userId, status])
+}
+
+model Fine {
+  id            String        @id @default(cuid())
+  userId         String
+  loanId         String?
+  amountCents    Int
+  currency       String        @default("USD")
+  reason         String
+  assessedAt     DateTime      @default(now())
+  paidAt         DateTime?
+  paymentStatus  PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+
+  user           User          @relation(fields: [userId], references: [id])
+
+  @@index([userId, paymentStatus])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  actor          User?    @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
