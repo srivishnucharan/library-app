@@ -1,0 +1,8 @@
+{
+  "name": "library-app",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "node apps/api/src/main.js"
+  }
+}
