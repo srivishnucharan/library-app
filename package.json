@@ -4,5 +4,8 @@
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "node apps/api/src/main.js"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.16"
   }
 }
