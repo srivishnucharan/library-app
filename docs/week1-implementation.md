@@ -57,6 +57,24 @@ pnpm -r list --depth -1
 pnpm --filter ./apps/api run dev
 ```
 
+
+## Current API progress
+
+The starter API now includes working Week 1 auth endpoints on `/api/v1/auth`:
+
+- `POST /register`
+- `POST /login`
+- `POST /refresh`
+- `POST /logout`
+
+Quick test example:
+
+```bash
+curl -X POST http://localhost:4000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"pass123"}'
+```
+
 ## Next coding tasks
 
 For exact copy/paste commands to scaffold NestJS + Auth, see `docs/nestjs-auth-bootstrap.md`.
