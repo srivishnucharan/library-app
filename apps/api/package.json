@@ -1,0 +1,12 @@
+{
+  "name": "@library/api",
+  "private": true,
+  "scripts": {
+    "start": "node src/main.js",
+    "dev": "node src/main.js",
+    "start:dev": "node src/main.js",
+    "build": "echo \"TODO: add NestJS build\"",
+    "lint": "echo \"TODO: add API lint\"",
+    "test": "echo \"TODO: add API tests\""
+  }
+}
