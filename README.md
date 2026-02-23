@@ -45,3 +45,16 @@ library-app/
 5. Add due-date notifications and overdue flagging.
 
 See detailed architecture, schema, and endpoint proposals in `docs/`.
+
+
+## Troubleshooting startup
+
+If `pnpm api:dev` fails with `Command "api:dev" not found`, use:
+
+```bash
+pnpm run api:dev
+# or guaranteed fallback
+node scripts/api-dev.js
+```
+
+For branch/merge checks, see `docs/week1-implementation.md`.
