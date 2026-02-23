@@ -71,4 +71,4 @@ bash scripts/smoke-api.sh
 
 ### Windows PowerShell users
 
-If `curl -H ... -d ...` fails with `Invoke-WebRequest` header errors, use `curl.exe` or `Invoke-RestMethod` instead. See `docs/week1-implementation.md` for copy/paste examples.
+If `curl -H ... -d ...` fails with `Invoke-WebRequest` header errors, use `Invoke-RestMethod` first (most reliable in PowerShell). `curl.exe` is optional and can fail with quoting. See `docs/week1-implementation.md` for copy/paste examples.

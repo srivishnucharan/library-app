@@ -184,13 +184,7 @@ In Windows PowerShell, `curl` maps to `Invoke-WebRequest`, so Linux-style flags 
 
 Use either:
 
-1) `curl.exe` (real curl on Windows):
-
-```powershell
-curl.exe -X POST http://localhost:3000/api/v1/auth/register -H "Content-Type: application/json" -d '{"name":"Test User","email":"test@example.com","password":"pass123"}'
-```
-
-2) Native PowerShell `Invoke-RestMethod` (recommended):
+1) Native PowerShell `Invoke-RestMethod` (recommended, safest):
 
 ```powershell
 $body = @{
@@ -202,7 +196,15 @@ $body = @{
 Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/v1/auth/register" -ContentType "application/json" -Body $body
 ```
 
-Use the same pattern for `/auth/login`, `/loans/issue`, and `/reservations`.
+2) `curl.exe` (only if you prefer curl syntax):
+
+```powershell
+curl.exe -X POST "http://localhost:3000/api/v1/auth/register" -H "Content-Type: application/json" --data-raw '{"name":"Test User","email":"test@example.com","password":"pass123"}'
+```
+
+If `curl.exe` still errors due quoting in PowerShell, use option 1 above (`Invoke-RestMethod`).
+
+Use the same `Invoke-RestMethod` pattern for `/auth/login`, `/loans/issue`, and `/reservations`.
 
 ## Week 2 execution checklist (copy/paste)
 
