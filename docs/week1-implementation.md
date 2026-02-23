@@ -66,6 +66,20 @@ pnpm run api:dev
 pnpm run api:dev
 curl http://localhost:3000/api/v1/books
 ```
+
+
+- If `curl` says `Failed to connect to localhost port 3000`, start and verify API in one command:
+
+```bash
+bash scripts/smoke-api.sh
+```
+
+This script starts `apps/api/src/main.js`, waits for readiness, runs:
+- `GET /health`
+- `GET /api/v1/books`
+- `GET /api/v1/books/book_1`
+and then stops the server automatically.
+
 - Ensure you are at repository root before running pnpm commands:
 
 ```bash

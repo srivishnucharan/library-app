@@ -58,3 +58,12 @@ node apps/api/src/main.js
 ```
 
 For branch/merge checks, see `docs/week1-implementation.md`.
+
+If `curl` shows `Failed to connect to localhost port 3000`, it means the API is not running yet.
+
+Use this one-command check from repo root:
+
+```bash
+bash scripts/smoke-api.sh
+```
+
