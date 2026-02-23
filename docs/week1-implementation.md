@@ -206,6 +206,31 @@ If `curl.exe` still errors due quoting in PowerShell, use option 1 above (`Invok
 
 Use the same `Invoke-RestMethod` pattern for `/auth/login`, `/loans/issue`, and `/reservations`.
 
+
+### If you get `409 Conflict` on register
+
+`POST /api/v1/auth/register` returns `409` when the email is already registered (expected behavior).
+
+Use a new email each run, for example:
+
+```powershell
+$body = @{
+  name = "Test User"
+  email = "test+$((Get-Random -Maximum 99999))@example.com"
+  password = "pass123"
+} | ConvertTo-Json
+
+$user = Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/v1/auth/register" -ContentType "application/json" -Body $body
+$user
+```
+
+Or if you want to re-use the same email, restart the API process to reset in-memory users:
+
+```powershell
+# stop current API terminal (Ctrl + C), then start again
+node apps/api/src/main.js
+```
+
 ## Week 2 execution checklist (copy/paste)
 
 Run these commands from repository root in Codespaces:

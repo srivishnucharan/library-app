@@ -59,6 +59,8 @@ node apps/api/src/main.js
 
 For branch/merge checks, see `docs/week1-implementation.md`.
 
+If register returns `409 Conflict`, the email already exists in current in-memory runtime. Use a new email or restart the API process.
+
 If `curl` shows `Failed to connect to localhost port 3000`, it means the API is not running yet.
 
 Use this one-command check from repo root:
