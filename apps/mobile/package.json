@@ -1,0 +1,10 @@
+{
+  "name": "@library/mobile",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"TODO: scaffold Expo app in apps/mobile\"",
+    "build": "echo \"TODO: add Expo build profile\"",
+    "lint": "echo \"TODO: add mobile lint\"",
+    "test": "echo \"TODO: add mobile tests\""
+  }
+}
