@@ -177,6 +177,33 @@ node apps/api/src/main.js
 
 
 
+
+## PowerShell note (important)
+
+In Windows PowerShell, `curl` maps to `Invoke-WebRequest`, so Linux-style flags like `-H` and `-d` fail.
+
+Use either:
+
+1) `curl.exe` (real curl on Windows):
+
+```powershell
+curl.exe -X POST http://localhost:3000/api/v1/auth/register -H "Content-Type: application/json" -d '{"name":"Test User","email":"test@example.com","password":"pass123"}'
+```
+
+2) Native PowerShell `Invoke-RestMethod` (recommended):
+
+```powershell
+$body = @{
+  name = "Test User"
+  email = "test@example.com"
+  password = "pass123"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/v1/auth/register" -ContentType "application/json" -Body $body
+```
+
+Use the same pattern for `/auth/login`, `/loans/issue`, and `/reservations`.
+
 ## Week 2 execution checklist (copy/paste)
 
 Run these commands from repository root in Codespaces:

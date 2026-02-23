@@ -67,3 +67,8 @@ Use this one-command check from repo root:
 bash scripts/smoke-api.sh
 ```
 
+
+
+### Windows PowerShell users
+
+If `curl -H ... -d ...` fails with `Invoke-WebRequest` header errors, use `curl.exe` or `Invoke-RestMethod` instead. See `docs/week1-implementation.md` for copy/paste examples.
