@@ -37,6 +37,23 @@ git pull
 cat package.json | sed -n "1,80p"
 ```
 
+
+- If `pnpm api:dev` says `Command "api:dev" not found`, run these exact checks:
+
+```bash
+pwd
+test -f package.json && cat package.json | sed -n "1,80p"
+git pull
+```
+
+Then start API with one of these (from repo root):
+
+```bash
+pnpm -w run api:dev
+# fallback that bypasses pnpm scripts entirely
+node scripts/api-dev.js
+```
+
 - If you see `ERR_PNPM_NO_SCRIPT Missing script: dev` under `apps/api`, run from repo root:
 
 ```bash

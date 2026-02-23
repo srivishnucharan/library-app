@@ -7,6 +7,7 @@
     "start:dev": "node src/main.js",
     "build": "echo \"TODO: add NestJS build\"",
     "lint": "echo \"TODO: add API lint\"",
-    "test": "echo \"TODO: add API tests\""
+    "test": "echo \"TODO: add API tests\"",
+    "api:dev": "node src/main.js"
   }
 }
