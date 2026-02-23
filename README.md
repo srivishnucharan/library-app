@@ -53,8 +53,8 @@ If `pnpm api:dev` fails with `Command "api:dev" not found`, use:
 
 ```bash
 pnpm run api:dev
-# or guaranteed fallback
-node scripts/api-dev.js
+# direct fallback (no scripts folder required)
+node apps/api/src/main.js
 ```
 
 For branch/merge checks, see `docs/week1-implementation.md`.

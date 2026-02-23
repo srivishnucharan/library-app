@@ -28,7 +28,7 @@ Invoke-WebRequest http://localhost:3000/health
 
 ## Troubleshooting (Codespaces)
 
-- `pnpm run api:dev` uses a resilient runner (`scripts/api-dev.js`) that auto-creates `apps/api/src/main.js` if missing, then starts the API on port `3000`.
+- `pnpm run api:dev` starts API directly from `apps/api/src/main.js` on port `3000` (no `scripts/` dependency).
 
 - If you see `Command "api:dev" not found`, your branch is missing the latest root scripts. Run:
 
@@ -50,8 +50,8 @@ Then start API with one of these (from repo root):
 
 ```bash
 pnpm -w run api:dev
-# fallback that bypasses pnpm scripts entirely
-node scripts/api-dev.js
+# fallback that bypasses pnpm script lookup entirely
+node apps/api/src/main.js
 ```
 
 - If you see `ERR_PNPM_NO_SCRIPT Missing script: dev` under `apps/api`, run from repo root:
@@ -80,6 +80,18 @@ pnpm -r list --depth -1
 pnpm --filter ./apps/api run dev
 ```
 
+
+
+- If `node apps/api/src/main.js` says `Cannot find module`, your branch is missing the API file. Sync your branch first:
+
+```bash
+git fetch origin
+git checkout week2-catalog-circulation
+git pull
+
+# if still missing, list API files
+find apps/api -maxdepth 3 -type f
+```
 
 ## Current API progress
 
@@ -146,6 +158,6 @@ git branch --merged | grep "week2-catalog-circulation" && echo "merged" || echo 
 If you are in Codespaces and want the safest API start command, use:
 
 ```bash
-node scripts/api-dev.js
+node apps/api/src/main.js
 ```
 
