@@ -6,6 +6,11 @@ const refreshSessions = new Map();
 
 const authBasePath = '/api/v1/auth';
 const catalogBasePath = '/api/v1/books';
+const loansIssuePath = '/api/v1/loans/issue';
+const loansReturnPath = '/api/v1/loans/return';
+const myLoansPath = '/api/v1/me/loans';
+const reservationsPath = '/api/v1/reservations';
+const myReservationsPath = '/api/v1/me/reservations';
 
 const books = [
   {
@@ -42,6 +47,16 @@ const books = [
     availableCopies: 5,
   },
 ];
+
+const copies = [
+  { id: 'copy_1', bookId: 'book_1', status: 'AVAILABLE' },
+  { id: 'copy_2', bookId: 'book_1', status: 'LOANED' },
+  { id: 'copy_3', bookId: 'book_2', status: 'AVAILABLE' },
+  { id: 'copy_4', bookId: 'book_3', status: 'AVAILABLE' },
+];
+
+const loans = [];
+const reservations = [];
 
 function json(res, statusCode, data) {
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
@@ -88,6 +103,29 @@ function sanitizeUser(user) {
 function parseBoolean(value) {
   if (value == null) return false;
   return String(value).toLowerCase() === 'true';
+}
+
+function parseDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date;
+}
+
+function toIsoDate(date) {
+  return date.toISOString();
+}
+
+function statusOfLoan(loan) {
+  if (loan.status === 'RETURNED') {
+    return 'RETURNED';
+  }
+  const dueDate = parseDate(loan.dueDate);
+  if (!dueDate) {
+    return 'ACTIVE';
+  }
+  return dueDate.getTime() < Date.now() ? 'OVERDUE' : 'ACTIVE';
 }
 
 function filterBooks(searchParams) {
@@ -223,6 +261,171 @@ async function handleLogout(req, res) {
   return json(res, 200, { message: 'Logout successful' });
 }
 
+async function handleIssueLoan(req, res) {
+  const body = await parseBody(req);
+  const userId = String(body.userId || '').trim();
+  const copyId = String(body.copyId || '').trim();
+  const days = Number(body.days || 14);
+
+  if (!userId || !copyId) {
+    return json(res, 400, { message: 'userId and copyId are required' });
+  }
+
+  if (!Number.isFinite(days) || days <= 0 || days > 90) {
+    return json(res, 400, { message: 'days must be between 1 and 90' });
+  }
+
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return json(res, 404, { message: 'User not found' });
+  }
+
+  const copy = copies.find((c) => c.id === copyId);
+  if (!copy) {
+    return json(res, 404, { message: 'Copy not found' });
+  }
+
+  if (copy.status !== 'AVAILABLE') {
+    return json(res, 409, { message: 'Copy is not available' });
+  }
+
+  const now = new Date();
+  const dueDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+  const loan = {
+    id: crypto.randomUUID(),
+    userId,
+    copyId,
+    bookId: copy.bookId,
+    issuedAt: toIsoDate(now),
+    dueDate: toIsoDate(dueDate),
+    returnedAt: null,
+    status: 'ACTIVE',
+  };
+
+  loans.push(loan);
+  copy.status = 'LOANED';
+
+  return json(res, 201, { message: 'Loan issued', loan });
+}
+
+async function handleReturnLoan(req, res) {
+  const body = await parseBody(req);
+  const loanId = String(body.loanId || '').trim();
+
+  if (!loanId) {
+    return json(res, 400, { message: 'loanId is required' });
+  }
+
+  const loan = loans.find((item) => item.id === loanId);
+  if (!loan) {
+    return json(res, 404, { message: 'Loan not found' });
+  }
+
+  if (loan.status === 'RETURNED') {
+    return json(res, 409, { message: 'Loan already returned' });
+  }
+
+  const copy = copies.find((c) => c.id === loan.copyId);
+  if (copy) {
+    copy.status = 'AVAILABLE';
+  }
+
+  loan.status = 'RETURNED';
+  loan.returnedAt = toIsoDate(new Date());
+
+  return json(res, 200, { message: 'Loan returned', loan });
+}
+
+function handleGetMyLoans(req, res, searchParams) {
+  const userId = String(searchParams.get('userId') || '').trim();
+  if (!userId) {
+    return json(res, 400, { message: 'userId query param is required' });
+  }
+
+  const userLoans = loans
+    .filter((loan) => loan.userId === userId)
+    .map((loan) => ({
+      ...loan,
+      computedStatus: statusOfLoan(loan),
+    }));
+
+  return json(res, 200, {
+    items: userLoans,
+    total: userLoans.length,
+  });
+}
+
+async function handleCreateReservation(req, res) {
+  const body = await parseBody(req);
+  const userId = String(body.userId || '').trim();
+  const bookId = String(body.bookId || '').trim();
+  const branchId = String(body.branchId || 'main').trim();
+
+  if (!userId || !bookId) {
+    return json(res, 400, { message: 'userId and bookId are required' });
+  }
+
+  const user = users.find((u) => u.id === userId);
+  if (!user) {
+    return json(res, 404, { message: 'User not found' });
+  }
+
+  const book = books.find((b) => b.id === bookId);
+  if (!book) {
+    return json(res, 404, { message: 'Book not found' });
+  }
+
+  const alreadyQueued = reservations.some(
+    (r) => r.userId === userId && r.bookId === bookId && r.status !== 'CANCELLED'
+  );
+  if (alreadyQueued) {
+    return json(res, 409, { message: 'Reservation already exists for this book' });
+  }
+
+  const hasAvailableCopy = copies.some((c) => c.bookId === bookId && c.status === 'AVAILABLE');
+  const reservation = {
+    id: crypto.randomUUID(),
+    userId,
+    bookId,
+    branchId,
+    status: hasAvailableCopy ? 'READY' : 'WAITING',
+    createdAt: toIsoDate(new Date()),
+  };
+
+  reservations.push(reservation);
+  return json(res, 201, { message: 'Reservation created', reservation });
+}
+
+function handleCancelReservation(req, res, reservationId) {
+  const reservation = reservations.find((r) => r.id === reservationId);
+  if (!reservation) {
+    return json(res, 404, { message: 'Reservation not found' });
+  }
+
+  if (reservation.status === 'CANCELLED') {
+    return json(res, 409, { message: 'Reservation already cancelled' });
+  }
+
+  reservation.status = 'CANCELLED';
+  reservation.cancelledAt = toIsoDate(new Date());
+
+  return json(res, 200, { message: 'Reservation cancelled', reservation });
+}
+
+function handleGetMyReservations(req, res, searchParams) {
+  const userId = String(searchParams.get('userId') || '').trim();
+  if (!userId) {
+    return json(res, 400, { message: 'userId query param is required' });
+  }
+
+  const userReservations = reservations.filter((r) => r.userId === userId);
+
+  return json(res, 200, {
+    items: userReservations,
+    total: userReservations.length,
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const parsedUrl = new URL(req.url, 'http://localhost');
@@ -255,6 +458,31 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === `${authBasePath}/logout`) {
       return await handleLogout(req, res);
+    }
+
+    if (req.method === 'POST' && pathname === loansIssuePath) {
+      return await handleIssueLoan(req, res);
+    }
+
+    if (req.method === 'POST' && pathname === loansReturnPath) {
+      return await handleReturnLoan(req, res);
+    }
+
+    if (req.method === 'GET' && pathname === myLoansPath) {
+      return handleGetMyLoans(req, res, parsedUrl.searchParams);
+    }
+
+    if (req.method === 'POST' && pathname === reservationsPath) {
+      return await handleCreateReservation(req, res);
+    }
+
+    if (req.method === 'DELETE' && pathname.startsWith(`${reservationsPath}/`)) {
+      const reservationId = pathname.replace(`${reservationsPath}/`, '').trim();
+      return handleCancelReservation(req, res, reservationId);
+    }
+
+    if (req.method === 'GET' && pathname === myReservationsPath) {
+      return handleGetMyReservations(req, res, parsedUrl.searchParams);
     }
 
     return json(res, 404, { message: 'Not Found' });

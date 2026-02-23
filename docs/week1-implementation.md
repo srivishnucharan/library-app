@@ -175,3 +175,51 @@ If you are in Codespaces and want the safest API start command, use:
 node apps/api/src/main.js
 ```
 
+
+
+## Week 2 execution checklist (copy/paste)
+
+Run these commands from repository root in Codespaces:
+
+```bash
+# 1) start API
+node apps/api/src/main.js
+```
+
+Open a second terminal and run:
+
+```bash
+# 2) verify baseline
+curl http://localhost:3000/health
+curl http://localhost:3000/api/v1/books
+
+# 3) create a user
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Week2 User","email":"week2@example.com","password":"pass123"}'
+
+# 4) issue loan (replace USER_ID from register response)
+curl -X POST http://localhost:3000/api/v1/loans/issue \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"<USER_ID>","copyId":"copy_1","days":7}'
+
+# 5) view member loans
+curl "http://localhost:3000/api/v1/me/loans?userId=<USER_ID>"
+
+# 6) create reservation
+curl -X POST http://localhost:3000/api/v1/reservations \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"<USER_ID>","bookId":"book_1","branchId":"main"}'
+
+# 7) view member reservations
+curl "http://localhost:3000/api/v1/me/reservations?userId=<USER_ID>"
+```
+
+Implemented Week 2 endpoints in current API starter:
+- `POST /api/v1/loans/issue`
+- `POST /api/v1/loans/return`
+- `GET /api/v1/me/loans?userId=...`
+- `POST /api/v1/reservations`
+- `DELETE /api/v1/reservations/:reservationId`
+- `GET /api/v1/me/reservations?userId=...`
+
